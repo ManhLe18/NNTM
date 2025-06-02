@@ -1,5 +1,5 @@
 # Dự án của bạn
-
+Xây dựng hệ thống tích hợp giữa thiết bị IoT (ESP32-CAM) và mô hình AI để: Phát hiện hình ảnh cây lúa có bị bệnh hay không(nếu bị là bệnh gì) và đưa ra phương án chăm sóc. ESP32-CAM: Chụp ảnh cây lúa gửi về server. Có Web/app hiển thị thông tin, lịch sử và có 1 phần giao diện hỏi chatbot
 ## Ảnh minh họa
 
 ### Ảnh 1: Mô tả ảnh 1
