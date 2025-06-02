@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhận diện bệnh lúa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', Arial, sans-serif;
+            background: linear-gradient(120deg, #e8f5e9 0%, #fffde7 100%);
+            min-height: 100vh;
+        }
+        .main-title {
+            font-weight: 700;
+            color: #388e3c;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        .slogan {
+            color: #8d6e63;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        .card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(56, 142, 60, 0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+        }
+        .card-title {
+            color: #388e3c;
+            font-weight: 700;
+        }
+        .btn-primary, .btn-success {
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(56, 142, 60, 0.08);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover, .btn-success:hover {
+            background: #43a047;
+            box-shadow: 0 4px 16px rgba(56, 142, 60, 0.15);
+        }
+        #preview, #esp32LiveView {
+            max-width: 100%;
+            max-height: 320px;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(56, 142, 60, 0.10);
+            border: 3px solid #c8e6c9;
+            margin-top: 10px;
+        }
+        .camera-container {
+            position: relative;
+        }
+        .camera-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(56, 142, 60, 0.85);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(56, 142, 60, 0.10);
+        }
+        .result-box {
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(255, 235, 59, 0.10);
+            padding: 28px 24px;
+            margin-top: 24px;
+        }
+        .confidence-bar {
+            height: 18px;
+            background: linear-gradient(90deg, #43a047 0%, #fffde7 100%);
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+        .history-img {
+            max-width: 90px;
+            max-height: 70px;
+            border: 2px solid #c8e6c9;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(56, 142, 60, 0.08);
+        }
+        .table {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .chatbot-box {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 350px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(56, 142, 60, 0.12);
+            z-index: 1000;
+            border: 2px solid #c8e6c9;
+        }
+        .chatbot-header {
+            background: #388e3c;
+            color: #fff;
+            padding: 14px;
+            border-radius: 16px 16px 0 0;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .chatbot-messages {
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .chatbot-input {
+            display: flex;
+            border-top: 1px solid #eee;
+            padding: 8px;
+        }
+        .chatbot-input input {
+            flex: 1;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+        }
+        .chatbot-input button {
+            border: none;
+            background: #43a047;
+            color: #fff;
+            padding: 0 22px;
+            font-weight: 600;
+            border-radius: 8px;
+            margin-left: 8px;
+        }
+        .chatbot-upload {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            border-top: 1px solid #eee;
+        }
+        .chatbot-upload button {
+            flex: 1;
+            border: none;
+            background: #e8f5e9;
+            color: #388e3c;
+            padding: 8px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chatbot-upload button:hover {
+            background: #c8e6c9;
+        }
+        .chatbot-upload input[type="file"] {
+            display: none;
+        }
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+        .user-message {
+            background: #e8f5e9;
+            margin-left: auto;
+        }
+        .bot-message {
+            background: #f5f5f5;
+        }
+        .chat-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+        .chat-file {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f5f5f5;
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+        .chat-file i {
+            font-size: 24px;
+            color: #388e3c;
+        }
+        @media (max-width: 991px) {
+            .chatbot-box { right: 10px; bottom: 10px; width: 98vw; }
+        }
+        @media (max-width: 767px) {
+            .main-title { font-size: 1.5rem; }
+            .container { padding: 0 2px; }
+            .chatbot-box { width: 100vw; left: 0; right: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4 mb-5">
+        <div class="text-center">
+            <h1 class="main-title">🌾 Nhận diện bệnh lúa thông minh</h1>
+            <div class="slogan">Ứng dụng AI giúp nông dân phát hiện bệnh lúa nhanh chóng, chính xác và dễ dàng.</div>
+        </div>
+        <div class="row g-4">
+            <!-- Upload ảnh -->
+            <div class="col-lg-6 col-md-12">
+                <div class="card p-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Tải ảnh lên</h5>
+                        <form id="uploadForm">
+                            <div class="mb-3">
+                                <input type="file" class="form-control" id="imageInput" accept="image/*">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Dự đoán</button>
+                        </form>
+                        <img id="preview" class="d-none mt-2">
+                    </div>
+                </div>
+            </div>
+            <!-- ESP32 Camera -->
+            <div class="col-lg-6 col-md-12">
+                <div class="card p-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Camera ESP32</h5>
+                        <div class="camera-container mb-2">
+                            <img id="esp32LiveView" src="http://{{ esp32_ip }}/stream" />
+                            <div class="camera-status" id="cameraStatus">Đang kết nối...</div>
+                        </div>
+                        <button onclick="predictEsp32()" class="btn btn-success">Chụp và dự đoán</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Webcam -->
+            <div class="col-lg-6 col-md-12">
+                <div class="card p-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Camera máy tính</h5>
+                        <div class="camera-container mb-2">
+                            <video id="webcam" autoplay playsinline style="width: 100%; border-radius: 14px; border: 3px solid #c8e6c9;"></video>
+                            <canvas id="webcamCanvas" style="display: none;"></canvas>
+                            <div class="camera-status" id="webcamStatus">Đang khởi tạo...</div>
+                        </div>
+                        <button onclick="startWebcam()" class="btn btn-primary me-2">Bật camera</button>
+                        <button onclick="captureAndPredict()" class="btn btn-success" id="captureBtn" disabled>Chụp và dự đoán</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Kết quả -->
+        <div class="result-box d-none" id="resultBox">
+            <h4 class="mb-3" style="color:#fbc02d; font-weight:700;">Kết quả dự đoán</h4>
+            <div id="resultContent"></div>
+            <div id="diseaseInfo" class="mt-3"></div>
+        </div>
+        <!-- Lịch sử dự đoán -->
+        <div class="mt-5">
+            <h4 style="color:#388e3c; font-weight:700;">Lịch sử dự đoán</h4>
+            <div id="historyTable"></div>
+        </div>
+        <!-- Nút xem lịch sử chat và modal -->
+        <button class="btn btn-secondary mt-3" onclick="showChatHistory()">Xem lịch sử chat</button>
+
+        <div class="modal fade" id="chatHistoryModal" tabindex="-1" aria-labelledby="chatHistoryModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="chatHistoryModalLabel">Lịch sử hội thoại Chatbot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body" id="chatHistoryContent">
+                <!-- Lịch sử sẽ được render ở đây -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thêm modal so sánh ảnh -->
+        <div class="modal fade" id="compareModal" tabindex="-1" aria-labelledby="compareModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="compareModalLabel">So sánh kết quả dự đoán</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Ảnh gốc</h6>
+                                <img id="originalImage" class="img-fluid rounded" style="max-height: 400px;">
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Kết quả dự đoán</h6>
+                                <div id="predictionResults"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Chatbot -->
+    <div class="chatbot-box" id="chatbotBox">
+        <div class="chatbot-header">🤖 Tư vấn bệnh lúa (Chatbot)</div>
+        <div class="chatbot-messages" id="chatbotMessages"></div>
+        <div class="chatbot-upload">
+            <input type="file" id="chatbotImageInput" accept="image/*">
+            <input type="file" id="chatbotFileInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx">
+            <button onclick="document.getElementById('chatbotImageInput').click()">📷 Ảnh</button>
+            <button onclick="document.getElementById('chatbotFileInput').click()">📎 File</button>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbotInput" placeholder="Nhập câu hỏi...">
+            <button onclick="sendChatbot()">Gửi</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const esp32_ip = "{{ esp32_ip }}";
+        // Preview ảnh
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('preview');
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Upload và dự đoán
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                displayResult(result);
+                loadHistory();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Dự đoán từ ESP32
+        async function predictEsp32() {
+            // Ẩn stream khi chụp
+            const liveView = document.getElementById('esp32LiveView');
+            const oldSrc = liveView.src;
+            liveView.style.display = 'none';
+            liveView.src = '';
+            try {
+                document.getElementById('cameraStatus').textContent = 'Đang xử lý...';
+                const response = await fetch('/predict_esp32', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                if (result.error) {
+                    document.getElementById('cameraStatus').textContent = 'Lỗi: ' + result.error;
+                    return;
+                }
+                displayResult(result);
+                loadHistory();
+                document.getElementById('cameraStatus').textContent = 'Đã xử lý xong';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('cameraStatus').textContent = 'Lỗi kết nối';
+            } finally {
+                // Hiện lại stream sau khi chụp xong
+                setTimeout(() => {
+                    liveView.src = `http://${esp32_ip}/stream`;
+                    liveView.style.display = '';
+                }, 500);
+            }
+        }
+
+        // Hiển thị kết quả
+        function displayResult(result) {
+            if (result.error) {
+                alert(result.error);
+                return;
+            }
+            const resultBox = document.getElementById('resultBox');
+            const resultContent = document.getElementById('resultContent');
+            let html = `
+                <h5 style="color:#388e3c;">Bệnh: ${result.class}</h5>
+                <p>Độ tin cậy: <span style="color:#fbc02d; font-weight:600;">${result.confidence.toFixed(2)}%</span></p>
+                <h6 style="color:#388e3c;">Xác suất các lớp:</h6>
+            `;
+            for (const [cls, prob] of Object.entries(result.probabilities)) {
+                html += `
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>${cls}</span>
+                            <span>${prob.toFixed(2)}%</span>
+                        </div>
+                        <div class="confidence-bar" style="width: ${prob}%"></div>
+                    </div>
+                `;
+            }
+            resultContent.innerHTML = html;
+            // Hiển thị thông tin bệnh cố định
+            const info = result.info || {};
+            let infoHtml = '';
+            if (info.desc) {
+                infoHtml += `<div class='alert alert-info'><b>Mô tả:</b> ${info.desc}<br><b>Khuyến nghị:</b> ${info.solution}</div>`;
+            }
+            document.getElementById('diseaseInfo').innerHTML = infoHtml;
+
+            // Gọi AI tự động trả lời giải pháp
+            if (result.class) {
+                const aiDiv = document.createElement('div');
+                aiDiv.innerHTML = "<i>Đang lấy giải pháp AI...</i>";
+                document.getElementById('diseaseInfo').appendChild(aiDiv);
+                fetch('/chatbot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: `Tôi phát hiện bệnh lúa: ${result.class}. Hãy tư vấn giải pháp điều trị chi tiết cho tôi.` })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    aiDiv.innerHTML = `<div class='alert alert-success'><b>AI tư vấn:</b> ${data.answer}</div>`;
+                })
+                .catch(() => {
+                    aiDiv.innerHTML = "<div class='alert alert-danger'>Không lấy được tư vấn AI.</div>";
+                });
+            }
+            resultBox.classList.remove('d-none');
+        }
+
+        // Lịch sử dự đoán
+        async function loadHistory() {
+            const res = await fetch('/history');
+            const history = await res.json();
+            let html = `<table class='table table-bordered table-sm'><thead><tr><th>Thời gian</th><th>Ảnh</th><th>Kết quả</th><th>Độ tin cậy</th><th>Phương thức</th><th>Thao tác</th></tr></thead><tbody>`;
+            for (let i = history.length - 1; i >= 0; i--) {
+                const h = history[i];
+                html += `<tr>
+                    <td>${h.time}</td>
+                    <td><img class='history-img' src='data:image/jpeg;base64,${h.image}' /></td>
+                    <td>${h.result.class}</td>
+                    <td>${h.result.confidence.toFixed(2)}%</td>
+                    <td>${h.method || 'Không xác định'}</td>
+                    <td>
+                        <button onclick="deleteHistoryByTime('${h.time}')" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </td>
+                </tr>`;
+            }
+            html += '</tbody></table>';
+            document.getElementById('historyTable').innerHTML = html;
+        }
+
+        async function deleteHistoryByTime(time) {
+            if (confirm('Bạn có chắc muốn xóa ảnh này khỏi lịch sử?')) {
+                try {
+                    const response = await fetch(`/delete_history_by_time/${encodeURIComponent(time)}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Đã xóa ảnh thành công');
+                        loadHistory();
+                    } else {
+                        alert('Lỗi: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Lỗi khi xóa ảnh');
+                }
+            }
+        }
+
+        // Thêm hàm hiển thị modal so sánh
+        async function showCompareModal(originalImageName) {
+            const modal = new bootstrap.Modal(document.getElementById('compareModal'));
+            
+            // Hiển thị ảnh gốc
+            document.getElementById('originalImage').src = `/original_images/${originalImageName}`;
+            
+            // Lấy kết quả dự đoán
+            const res = await fetch('/compare_predictions');
+            const history = await res.json();
+            
+            // Lọc các dự đoán cho cùng một ảnh
+            const predictions = history.filter(h => h.result.original_image === originalImageName);
+            
+            let html = '<div class="table-responsive"><table class="table table-sm">';
+            html += '<thead><tr><th>Thời gian</th><th>Phương thức</th><th>Kết quả</th><th>Độ tin cậy</th></tr></thead><tbody>';
+            
+            predictions.forEach(pred => {
+                html += `
+                    <tr>
+                        <td>${pred.time}</td>
+                        <td>${pred.method || 'Không xác định'}</td>
+                        <td>${pred.result.class}</td>
+                        <td>${pred.result.confidence.toFixed(2)}%</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            document.getElementById('predictionResults').innerHTML = html;
+            
+            modal.show();
+        }
+
+        // Webcam handling
+        let webcamStream = null;
+        const webcam = document.getElementById('webcam');
+        const webcamCanvas = document.getElementById('webcamCanvas');
+        const webcamStatus = document.getElementById('webcamStatus');
+        const captureBtn = document.getElementById('captureBtn');
+
+        async function startWebcam() {
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'environment' // Ưu tiên camera sau nếu có
+                    } 
+                });
+                webcam.srcObject = webcamStream;
+                webcamStatus.textContent = 'Camera đã sẵn sàng';
+                captureBtn.disabled = false;
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+                webcamStatus.textContent = 'Không thể truy cập camera';
+            }
+        }
+
+        async function captureAndPredict() {
+            if (!webcamStream) return;
+            
+            try {
+                webcamStatus.textContent = 'Đang xử lý...';
+                captureBtn.disabled = true;
+                
+                // Lấy kích thước thực của video
+                const videoWidth = webcam.videoWidth;
+                const videoHeight = webcam.videoHeight;
+                
+                // Thiết lập canvas với kích thước của video
+                webcamCanvas.width = videoWidth;
+                webcamCanvas.height = videoHeight;
+                
+                // Vẽ frame hiện tại từ video lên canvas
+                const ctx = webcamCanvas.getContext('2d');
+                ctx.drawImage(webcam, 0, 0, videoWidth, videoHeight);
+                
+                // Chuyển canvas thành base64 với chất lượng cao
+                const imageData = webcamCanvas.toDataURL('image/jpeg', 0.95);
+                
+                // Gửi ảnh lên server
+                const response = await fetch('/predict_webcam', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ image: imageData })
+                });
+                
+                const result = await response.json();
+                if (result.error) {
+                    webcamStatus.textContent = 'Lỗi: ' + result.error;
+                    return;
+                }
+                
+                // Hiển thị kết quả
+                displayResult(result);
+                loadHistory();
+                webcamStatus.textContent = 'Đã xử lý xong';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                webcamStatus.textContent = 'Lỗi xử lý ảnh';
+            } finally {
+                captureBtn.disabled = false;
+            }
+        }
+
+        // Chatbot
+        const chatbotMessages = document.getElementById('chatbotMessages');
+        function appendChatbotMsg(msg, isUser) {
+            const div = document.createElement('div');
+            div.style.margin = '5px 0';
+            div.style.textAlign = isUser ? 'right' : 'left';
+            div.innerHTML = `<span style='background:${isUser ? "#e6f7ff" : "#f1f1f1"};padding:7px 14px;border-radius:14px;display:inline-block;'>${msg}</span>`;
+            chatbotMessages.appendChild(div);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+
+        async function sendChatbot() {
+            const input = document.getElementById('chatbotInput');
+            const message = input.value.trim();
+            if (message) {
+                const messagesDiv = document.getElementById('chatbotMessages');
+                
+                // Hiển thị tin nhắn người dùng
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'chat-message user-message';
+                userMessageDiv.textContent = message;
+                messagesDiv.appendChild(userMessageDiv);
+                
+                // Gửi tin nhắn đến server
+                fetch('/chatbot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hiển thị câu trả lời của bot
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'chat-message bot-message';
+                    botMessageDiv.textContent = data.answer;
+                    messagesDiv.appendChild(botMessageDiv);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Lỗi khi gửi tin nhắn');
+                });
+                
+                input.value = '';
+            }
+        }
+
+        document.getElementById('chatbotInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendChatbot();
+        });
+
+        // Load history khi trang được tải
+        loadHistory();
+
+        async function showChatHistory() {
+            const res = await fetch('/chatbot_history');
+            const history = await res.json();
+            let html = '';
+            if (Array.isArray(history) && history.length > 0) {
+                html += `<table class='table table-bordered'><thead><tr><th>Thời gian</th><th>Câu hỏi</th><th>Trả lời</th></tr></thead><tbody>`;
+                for (let i = history.length - 1; i >= 0; i--) {
+                    const h = history[i];
+                    html += `<tr>
+                        <td>${h.time || ''}</td>
+                        <td>${h.question || ''}</td>
+                        <td>${h.answer || ''}</td>
+                    </tr>`;
+                }
+                html += '</tbody></table>';
+            } else {
+                html = '<div class="alert alert-info">Chưa có lịch sử hội thoại nào.</div>';
+            }
+            document.getElementById('chatHistoryContent').innerHTML = html;
+            const modal = new bootstrap.Modal(document.getElementById('chatHistoryModal'));
+            modal.show();
+        }
+
+        // Xử lý upload ảnh trong chatbot
+        document.getElementById('chatbotImageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/chatbot_upload_image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const messagesDiv = document.getElementById('chatbotMessages');
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'chat-message user-message';
+                        messageDiv.innerHTML = `
+                            <div>Đã gửi ảnh</div>
+                            <img src="data:image/jpeg;base64,${data.image}" class="chat-image">
+                        `;
+                        messagesDiv.appendChild(messageDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    } else {
+                        alert('Lỗi khi upload ảnh: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Lỗi khi upload ảnh');
+                });
+            }
+        });
+
+        // Xử lý upload file trong chatbot
+        document.getElementById('chatbotFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/chatbot_upload_file', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const messagesDiv = document.getElementById('chatbotMessages');
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'chat-message user-message';
+                        messageDiv.innerHTML = `
+                            <div>Đã gửi file</div>
+                            <div class="chat-file">
+                                <i class="fas fa-file"></i>
+                                <span>${data.filename}</span>
+                            </div>
+                        `;
+                        messagesDiv.appendChild(messageDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    } else {
+                        alert('Lỗi khi upload file: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Lỗi khi upload file');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

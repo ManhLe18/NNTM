@@ -1,0 +1,24 @@
+# Bỏ các thư mục dữ liệu lớn
+train/
+test/
+validation/
+uploads/
+debug_images/
+
+# Bỏ các file log, JSON nặng
+history.json
+chatbot_history.json
+gemini_log.txt
+
+# Bỏ file mô hình
+*.pth
+
+# Bỏ môi trường ảo nếu có
+env/
+venv/
+
+# File cache, tạm
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
